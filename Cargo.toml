@@ -1,0 +1,27 @@
+[package]
+name = "dlsm-sync"
+description = "基于共享内存的同步原语: MCS 锁、Epoch GC、ticket lock"
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+authors.workspace = true
+repository.workspace = true
+
+[lints]
+workspace = true
+
+[dependencies]
+dlsm-core.workspace = true
+dlsm-shm.workspace = true
+thiserror.workspace = true
+tracing.workspace = true
+
+[dev-dependencies]
+dlsm-shm.workspace = true
+dlsm-testutils.workspace = true
+pretty_assertions.workspace = true
+proptest.workspace = true
+
+[target.'cfg(loom)'.dev-dependencies]
+loom.workspace = true
