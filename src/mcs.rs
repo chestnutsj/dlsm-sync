@@ -15,7 +15,9 @@
 
 use core::marker::PhantomData;
 use core::ptr;
-use core::sync::atomic::{AtomicBool, AtomicPtr, Ordering};
+use core::sync::atomic::Ordering;
+
+use crate::compat::{AtomicBool, AtomicPtr};
 
 /// 锁等待循环里的"让步"策略，用于把等待行为注入到锁中。
 ///
@@ -55,7 +57,19 @@ impl McsNode {
     /// 构造一个新的等待节点。
     #[must_use]
     #[inline]
+    #[cfg(not(loom))]
     pub const fn new() -> Self {
+        Self {
+            next: AtomicPtr::new(ptr::null_mut()),
+            locked: AtomicBool::new(false),
+        }
+    }
+
+    /// 构造一个新的等待节点（loom 原子非 const，故此变体非 const）。
+    #[must_use]
+    #[inline]
+    #[cfg(loom)]
+    pub fn new() -> Self {
         Self {
             next: AtomicPtr::new(ptr::null_mut()),
             locked: AtomicBool::new(false),
@@ -90,7 +104,16 @@ impl McsLock<SpinPark> {
     /// 自定义等待策略用 [`McsLock::with_park`]（如 `McsLock::<CoroutinePark>::with_park()`）。
     #[must_use]
     #[inline]
+    #[cfg(not(loom))]
     pub const fn new() -> Self {
+        Self::with_park()
+    }
+
+    /// 创建一个未被持有的 MCS 锁（loom 原子非 const，故此变体非 const）。
+    #[must_use]
+    #[inline]
+    #[cfg(loom)]
+    pub fn new() -> Self {
         Self::with_park()
     }
 }
@@ -99,7 +122,19 @@ impl<P: Park> McsLock<P> {
     /// 创建一个未被持有、等待策略为 `P` 的 MCS 锁。
     #[must_use]
     #[inline]
+    #[cfg(not(loom))]
     pub const fn with_park() -> Self {
+        Self {
+            tail: AtomicPtr::new(ptr::null_mut()),
+            _park: PhantomData,
+        }
+    }
+
+    /// 创建一个未被持有、等待策略为 `P` 的 MCS 锁（loom 变体，非 const）。
+    #[must_use]
+    #[inline]
+    #[cfg(loom)]
+    pub fn with_park() -> Self {
         Self {
             tail: AtomicPtr::new(ptr::null_mut()),
             _park: PhantomData,

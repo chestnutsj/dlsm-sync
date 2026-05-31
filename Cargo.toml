@@ -1,27 +1,44 @@
+# 独立 workspace：dlsm-sync 可单独 clone 构建测试，亦可作为父仓 submodule。
+[workspace]
+
 [package]
 name = "dlsm-sync"
-description = "基于共享内存的同步原语: MCS 锁、Epoch GC、ticket lock"
-version.workspace = true
-edition.workspace = true
-rust-version.workspace = true
-license.workspace = true
-authors.workspace = true
-repository.workspace = true
+description = "同步原语：MCS 公平排队锁（Park 注入）、Epoch GC（EBR）"
+version = "0.0.1"
+edition = "2021"
+rust-version = "1.75"
+license = "TBD"
+authors = ["DLSM Authors"]
+repository = "https://github.com/chestnutsj/dlsm-sync"
 
-[lints]
-workspace = true
+[lints.rust]
+unsafe_op_in_unsafe_fn = "deny"
+unused_must_use = "deny"
+missing_debug_implementations = "warn"
+missing_docs = "warn"
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(loom)'] }
 
-[dependencies]
-dlsm-core.workspace = true
-dlsm-shm.workspace = true
-thiserror.workspace = true
-tracing.workspace = true
+[lints.clippy]
+all = { level = "warn", priority = -1 }
+pedantic = { level = "warn", priority = -1 }
+todo = "deny"
+dbg_macro = "deny"
+unimplemented = "deny"
+unwrap_used = "warn"
+expect_used = "warn"
+
+# 库本体无外部依赖（仅 std/core）。
 
 [dev-dependencies]
-dlsm-shm.workspace = true
-dlsm-testutils.workspace = true
-pretty_assertions.workspace = true
-proptest.workspace = true
+# 跨进程锁测试用到共享内存 Arena。本地超级项目内用 path（同级 submodule）。
+# 对外发布/他人单独使用本仓时，改为：dlsm-shm = { git = "https://github.com/chestnutsj/dlsm-shm.git" }
+dlsm-shm = { path = "../dlsm-shm" }
 
-[target.'cfg(loom)'.dev-dependencies]
-loom.workspace = true
+# loom 仅在 `--cfg loom` 构建启用（库代码 compat.rs 在 cfg(loom) 下 use loom 原子）。
+[target.'cfg(loom)'.dependencies]
+loom = "0.7"
+
+[profile.release]
+opt-level = 3
+lto = "thin"
+codegen-units = 1
