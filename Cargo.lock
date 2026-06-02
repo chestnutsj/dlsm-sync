@@ -30,6 +30,7 @@ checksum = "9330f8b2ff13f34540b44e946ef35111825727b38d33286ef986142615121801"
 [[package]]
 name = "dlsm-shm"
 version = "0.0.1"
+source = "git+https://github.com/chestnutsj/dlsm-shm.git?branch=master#ee7bd17ec25a8e8f4a26b9b9fb92a7771c02ee42"
 dependencies = [
  "libc",
  "thiserror",
